@@ -84,10 +84,20 @@ impl Shader {
     }
 
     pub fn from_vert_source(source: &CStr) -> Result<Shader,String> {
-        Shader::from_source(source,gl::VERTEX_SHADER)
+        match Shader::from_source(source,gl::VERTEX_SHADER){
+            Ok(shader) => Ok(shader),
+            Err(_) => {
+                panic!("Error compiling the vertex shader.");
+            } 
+        }
     }
     pub fn from_frag_source(source: &CStr) -> Result<Shader,String> {
-        Shader::from_source(source,gl::FRAGMENT_SHADER)
+        match Shader::from_source(source,gl::FRAGMENT_SHADER){
+            Ok(shader) => Ok(shader),
+            Err(_) => {
+                panic!("Error compiling the fragment shader.");
+            } 
+        }
     }
 
     pub fn id(&self) -> gl::types::GLuint{
@@ -126,6 +136,8 @@ fn shader_from_source(
             gl::GetShaderiv(id,gl::INFO_LOG_LENGTH,&mut len);
         }
         let error = create_whitespace_cstring_with_len(len as usize);
+        println!("Error compiling shader >_<");
+        println!("Shader type error: {}", kind);
         return Err(error.to_string_lossy().into_owned());    
     }
 
@@ -140,3 +152,19 @@ fn create_whitespace_cstring_with_len(len: usize) -> CString {
     // convert buffer to CString
     unsafe { CString::from_vec_unchecked(buffer) }
 }
+
+pub struct Uniform{
+    pub id : gl::types::GLint,
+}
+
+impl Uniform{
+    pub fn new(program : u32, name: &str) -> Result<Self,String>{
+        let cname : CString = CString::new(name).expect("CString::new failed");
+        let location : gl::types::GLint = unsafe{ gl::GetUniformLocation(program, cname.as_ptr())};
+        if location == -1{
+            return Err(format!("Couldnt get location info for {}",name));       
+        }
+        Ok(Uniform { id:location })
+    }
+}
+

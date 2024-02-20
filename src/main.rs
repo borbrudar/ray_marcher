@@ -6,8 +6,10 @@ use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use std::time::Duration;
+use render_gl::Uniform;
 
 pub fn main() {
+    //std::env::set_var("RUST_BACKTRACE", "full");    
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     
@@ -38,11 +40,11 @@ pub fn main() {
     
     use std::ffi::CString;
     let vert_shader = render_gl::Shader::from_vert_source(
-        &CString::new(include_str!("triangle.vert")).unwrap()
+        &CString::new(include_str!("vert.glsl")).unwrap()
     ).unwrap();
     
     let frag_shader = render_gl::Shader::from_frag_source(
-        &CString::new(include_str!("triangle.frag")).unwrap()
+        &CString::new(include_str!("frag.glsl")).unwrap()
     ).unwrap();
     
     let shader_program = render_gl::Program::from_shaders(
@@ -50,11 +52,16 @@ pub fn main() {
     ).unwrap();
 
 
+    /**/
     let vertices: Vec<f32> = vec![
-    // positions      // colors
-    0.5, -0.5, 0.0,   1.0, 0.0, 0.0,   // bottom right
-    -0.5, -0.5, 0.0,  0.0, 1.0, 0.0,   // bottom left
-    0.0,  0.5, 0.0,   0.0, 0.0, 1.0    // top
+    // positions      
+    1.0, -1.0, 0.0,   // bottom right
+    -1.0, -1.0, 0.0,  // bottom left
+    -1.0,  1.0, 0.0,   // top
+
+    -1.0,  1.0, 0.0,   // top
+    1.0, 1.0, 0.0, // top right
+    1.0, -1.0, 0.0,   // bottom right
     ];
 
     let mut vbo: gl::types::GLuint = 0;
@@ -85,24 +92,18 @@ pub fn main() {
             3, // the number of components per generic vertex attribute
             gl::FLOAT, // data type
             gl::FALSE, // normalized (int-to-float conversion)
-            (6 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
+            (3 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
             std::ptr::null() // offset of the first component
         );
-        
-        gl::EnableVertexAttribArray(1); // this is "layout (location = 0)" in vertex shader
-        gl::VertexAttribPointer(
-            1, // index of the generic vertex attribute ("layout (location = 0)")
-            3, // the number of components per generic vertex attribute
-            gl::FLOAT, // data type
-            gl::FALSE, // normalized (int-to-float conversion)
-            (6 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
-            (3 * std::mem::size_of::<f32>()) as *const gl::types::GLvoid // offset of the first component
-        );
-
+    
         
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         gl::BindVertexArray(0);
     }
+    /**/
+
+    let u_resolution : Uniform = Uniform::new(shader_program.id(),"u_resolution").unwrap();
+    unsafe{ gl::Uniform2f(u_resolution.id, 800.0, 600.0)};
 
     'main: loop {
         for event in event_pump.poll_iter() {
@@ -116,15 +117,15 @@ pub fn main() {
         }
 
         shader_program.set_used();
+        
         unsafe{
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+            //gl::Clear(gl::COLOR_BUFFER_BIT);
             gl::BindVertexArray(vao);
             gl::DrawArrays(
                 gl::TRIANGLES, // mode
                 0, //starting index in the enabled arrays
-                3 // number of indices to be rendered
+                6 // number of indices to be rendered
             );
-
         }
         window.gl_swap_window();
         
