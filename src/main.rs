@@ -50,18 +50,21 @@ pub fn main() {
     let shader_program = render_gl::Program::from_shaders(
         &[vert_shader,frag_shader]
     ).unwrap();
+    
 
-
+    let u_resolution : Uniform = Uniform::new(shader_program.id(),"u_resolution").unwrap();
+    
+    
     /**/
     let vertices: Vec<f32> = vec![
     // positions      
-    1.0, -1.0, 0.0,   // bottom right
+     1.0, -1.0, 0.0,   // bottom right
     -1.0, -1.0, 0.0,  // bottom left
     -1.0,  1.0, 0.0,   // top
 
     -1.0,  1.0, 0.0,   // top
-    1.0, 1.0, 0.0, // top right
-    1.0, -1.0, 0.0,   // bottom right
+     1.0,  1.0, 0.0, // top right
+     1.0, -1.0, 0.0,   // bottom right
     ];
 
     let mut vbo: gl::types::GLuint = 0;
@@ -95,16 +98,13 @@ pub fn main() {
             (3 * std::mem::size_of::<f32>()) as gl::types::GLint, // stride (byte offset between consecutive attributes)
             std::ptr::null() // offset of the first component
         );
-    
+        
         
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         gl::BindVertexArray(0);
     }
     /**/
-
-    let u_resolution : Uniform = Uniform::new(shader_program.id(),"u_resolution").unwrap();
-    unsafe{ gl::Uniform2f(u_resolution.id, 800.0, 600.0)};
-
+    
     'main: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -115,7 +115,8 @@ pub fn main() {
                 _ => {}
             }
         }
-
+        
+        unsafe{ gl::Uniform2f(u_resolution.id, 800.0, 600.0)};
         shader_program.set_used();
         
         unsafe{
