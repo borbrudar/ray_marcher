@@ -20,7 +20,7 @@ pub fn main() {
     gl_attr.set_context_version(3,3);
 
     let window = video_subsystem
-    .window("Ray marcher fr", 800, 600)
+    .window("Ray marcher fr", 1080, 720)
     .opengl()
     .resizable()
         .position_centered()
@@ -31,7 +31,7 @@ pub fn main() {
     let gl = gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
 
     unsafe{
-        gl::Viewport(0,0,900,700);
+        gl::Viewport(0,0,1080,720);
         gl::ClearColor(0.3,0.3,0.5,1.0);
     }
 
@@ -116,7 +116,7 @@ pub fn main() {
             }
         }
         
-        unsafe{ gl::Uniform2f(u_resolution.id, 800.0, 600.0)};
+        unsafe{ gl::Uniform2f(u_resolution.id, 1080.0, 720.0)};
         shader_program.set_used();
         
         unsafe{
