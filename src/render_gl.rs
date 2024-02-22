@@ -135,10 +135,19 @@ fn shader_from_source(
         unsafe{
             gl::GetShaderiv(id,gl::INFO_LOG_LENGTH,&mut len);
         }
-        let error = create_whitespace_cstring_with_len(len as usize);
+        
+        let mut error = Vec::with_capacity(len as usize);
+        let buf_ptr = error.as_mut_ptr() as *mut gl::types::GLchar;
+        unsafe{
+            gl::GetShaderInfoLog(id, len, std::ptr::null_mut(), buf_ptr);
+            let s = CStr::from_ptr(buf_ptr).to_str().unwrap();
+            println!("{}",s);
+        }
+        
         println!("Error compiling shader >_<");
         println!("Shader type error: {}", kind);
-        return Err(error.to_string_lossy().into_owned());    
+        //return Err(error.to_string_lossy().into_owned());    
+        return Err("Lol\n".to_owned());
     }
 
     Ok(id)
