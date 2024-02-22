@@ -64,6 +64,17 @@ vec3 getLight(vec3 p, vec3 rd,vec3 color){
     return diffuse;
 }
 
+vec3 getMaterial(vec3 p, float id){
+    vec3 m;
+    switch(int(id)){
+        case 1: 
+        m = vec3(0.9,0.9,0.0); break;
+        case 2: 
+        m = vec3(0.0,0.5,0.5); break;
+    }
+    return m;
+}
+
 void render(inout vec3 col, in vec2 uv){
     vec3 ro = vec3(0.0,0.0,-3.0);
     vec3 rd = normalize(vec3(uv,FOV));
@@ -72,7 +83,8 @@ void render(inout vec3 col, in vec2 uv){
 
     if(object.x < MAX_DIST){
         vec3 p = ro + object.x * rd;
-        col += getLight(p,rd,vec3(1));
+        vec3 material = getMaterial(p,object.y);
+        col += getLight(p,rd,material);
     }
 }
 
@@ -84,5 +96,7 @@ void main() {
     render(col,uv);
 
     //render(col,u_resolution);
+    //gamma correction
+    col = pow(col, vec3(0.4545));
     fragColor = vec4(col, 1.0);
 }
