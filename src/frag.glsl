@@ -59,18 +59,29 @@ vec3 getLight(vec3 p, vec3 rd,vec3 color){
     vec3 lightPos = vec3(20.0,40.0,-30.0);
     vec3 L = normalize(lightPos - p);
     vec3 N = getNormal(p);
+    vec3 V = -rd;
+    vec3 R = reflect(-L,N);
 
+    vec3 specColor = vec3(0.5);
+    vec3 specular = specColor * pow(clamp(dot(R,V), 0.0,1.0),10.0);
     vec3 diffuse = color * clamp(dot(L,N),0.0,1.0);
-    return diffuse;
+    vec3 ambient = color * 0.05;
+
+    //shadows 
+    float d = rayMarch(p + N*0.02, normalize(lightPos)).x;
+    if(d < length(lightPos-p)) return vec3(0.0);
+
+    return diffuse + ambient + specular;
 }
 
 vec3 getMaterial(vec3 p, float id){
     vec3 m;
     switch(int(id)){
         case 1: 
-        m = vec3(0.9,0.9,0.0); break;
+        m = vec3(0.9,0.0,0.0); break;
         case 2: 
-        m = vec3(0.0,0.5,0.5); break;
+        m = vec3(0.2 + 0.4 *mod(floor(p.x) + floor(p.z),2.0)); 
+        break;
     }
     return m;
 }
@@ -81,10 +92,17 @@ void render(inout vec3 col, in vec2 uv){
 
     vec2 object = rayMarch(ro,rd);
 
+    vec3 background = vec3(0.5,0.8,0.9);
+
     if(object.x < MAX_DIST){
         vec3 p = ro + object.x * rd;
         vec3 material = getMaterial(p,object.y);
         col += getLight(p,rd,material);
+
+        //fog
+        col = mix(col,background,1.0 - exp(-0.0008 * object.x * object.x));
+    }else{
+        col += background - max(0.95 * rd.y, 0.0);
     }
 }
 
