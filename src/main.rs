@@ -3,7 +3,7 @@ extern crate gl;
 
 pub mod render_gl;
 use sdl2::pixels::Color;
-use sdl2::event::Event;
+use sdl2::event::{Event, self};
 use sdl2::keyboard::Keycode;
 use std::time::Duration;
 use render_gl::Uniform;
@@ -53,7 +53,7 @@ pub fn main() {
     
 
     let u_resolution : Uniform = Uniform::new(shader_program.id(),"u_resolution").unwrap();
-    
+    let u_mouse : Uniform = Uniform::new(shader_program.id(),"u_mouse").unwrap();
     
     /**/
     let vertices: Vec<f32> = vec![
@@ -116,7 +116,12 @@ pub fn main() {
             }
         }
         
-        unsafe{ gl::Uniform2f(u_resolution.id, 1080.0, 720.0)};
+        unsafe{ 
+            gl::Uniform2f(u_resolution.id, 1080.0, 720.0);
+            gl::Uniform2f(u_mouse.id,
+            event_pump.mouse_state().x() as f32,
+            event_pump.mouse_state().y() as f32);
+        }
         shader_program.set_used();
         
         unsafe{

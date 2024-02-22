@@ -2,6 +2,8 @@
 //#include hg_sdf.glsl
 
 uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+
 in vec2 fragCoord;
 out vec4 fragColor;
 
@@ -86,9 +88,32 @@ vec3 getMaterial(vec3 p, float id){
     return m;
 }
 
+mat3 getCam(vec3 ro,vec3 lookAt){
+    vec3 camF = normalize(vec3(lookAt-ro));
+    vec3 camR = normalize(cross(camF,vec3(0.0,1.0,0.0)));
+    vec3 camU = cross(camR,camF);
+    return mat3(camR,camU,camF);
+}
+
+#define PI 3.14159265
+#define TAU (2*PI)
+
+void pR(inout vec2 p, float a) {
+	p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
+}
+
+void mouseControl(inout vec3 ro){
+    vec2 m = u_mouse / u_resolution;
+    pR(ro.yz,m.y * PI * 0.5 - 0.5);
+    pR(ro.xz, m.x * TAU);
+}
+
 void render(inout vec3 col, in vec2 uv){
-    vec3 ro = vec3(0.0,0.0,-3.0);
-    vec3 rd = normalize(vec3(uv,FOV));
+    vec3 ro = vec3(3.0,3.0,-3.0);
+    mouseControl(ro);
+    vec3 lookAt = vec3(0,0,0);
+    //vec3 rd = normalize(vec3(uv,FOV));
+    vec3 rd = getCam(ro,lookAt) * normalize(vec3(uv,FOV));
 
     vec2 object = rayMarch(ro,rd);
 
