@@ -61,7 +61,7 @@ vec3 getLight(vec3 p, vec3 rd,vec3 color){
     vec3 N = getNormal(p);
 
     vec3 diffuse = color * clamp(dot(L,N),0.0,1.0);
-    return N;
+    return diffuse;
 }
 
 void render(inout vec3 col, in vec2 uv){
@@ -69,8 +69,8 @@ void render(inout vec3 col, in vec2 uv){
     vec3 rd = normalize(vec3(uv,FOV));
 
     vec2 object = rayMarch(ro,rd);
+
     if(object.x < MAX_DIST){
-        col += 3.0 / object.x;
         vec3 p = ro + object.x * rd;
         col += getLight(p,rd,vec3(1));
     }
