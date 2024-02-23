@@ -17,13 +17,86 @@ float fPlane(vec3 p, vec3 n, float distanceFromOrigin) {
 	return dot(p, n) + distanceFromOrigin;
 }
 
+// Cylinder standing upright on the xz plane
+float fCylinder(vec3 p, float r, float height) {
+	float d = length(p.xz) - r;
+	d = max(d, abs(p.y) - height);
+	return d;
+}
+
 vec2 fOpUnionID(vec2 res1,vec2 res2){
     return (res1.x < res2.x) ? res1 : res2;
 }
 
+vec2 fOpDifferenceID(vec2 res1,vec2 res2){
+    return (res1.x > -res2.x) ? res1 : vec2(-res2.x,res2.y);
+}
+
+float vmax(vec3 v) {
+	return max(max(v.x, v.y), v.z);
+}
+
+float fBox(vec3 p, vec3 b) {
+	vec3 d = abs(p) - b;
+	return length(max(d, vec3(0))) + vmax(min(d, vec3(0)));
+}
+
+float vmax(vec2 v) {
+	return max(v.x, v.y);
+}
+
+float fBox2(vec2 p, vec2 b) {
+	vec2 d = abs(p) - b;
+	return length(max(d, vec2(0))) + vmax(min(d, vec2(0)));
+}
+
+void pR45(inout vec2 p) {
+	p = (p + vec2(p.y, -p.x))*sqrt(0.5);
+}
+float pMod1(inout float p, float size) {
+	float halfsize = size*0.5;
+	float c = floor((p + halfsize)/size);
+	p = mod(p + halfsize, size) - halfsize;
+	return c;
+}
+
+float fOpDifferenceColumns(float a, float b, float r, float n) {
+	a = -a;
+	float m = min(a, b);
+	//avoid the expensive computation where not needed (produces discontinuity though)
+	if ((a < r) && (b < r)) {
+		vec2 p = vec2(a, b);
+		float columnradius = r*sqrt(2)/n/2.0;
+		columnradius = r*sqrt(2)/((n-1)*2+sqrt(2));
+
+		pR45(p);
+		p.y += columnradius;
+		p.x -= sqrt(2)/2*r;
+		p.x += -columnradius*sqrt(2)/2;
+
+		if (mod(n,2) == 1) {
+			p.y += columnradius;
+		}
+		pMod1(p.y,columnradius*2);
+
+		float result = -length(p) + columnradius;
+		result = max(result, p.x);
+		result = min(result, a);
+		return -min(result, b);
+	} else {
+		return -m;
+	}
+}
+
+vec2 fOpDifferenceColumnsID(vec2 res1,vec2 res2,float r,float n){
+    float dist = fOpDifferenceColumns(res1.x,res2.x,r,n);
+    return (res1.x > -res2.x) ? vec2(dist,res1.y) : vec2(dist,res2.y);
+}
+
+
 vec2 map(vec3 p){
     //plane
-    float planeDist= fPlane(p,vec3(0.0,1.0,0.0),1.0);
+    float planeDist= fPlane(p,vec3(0.0,1.0,0.0),10.0);
     //float planeDist= 2;
     float planeID = 2.0;
     vec2 plane = vec2(planeDist,planeID);
@@ -33,8 +106,29 @@ vec2 map(vec3 p){
     float sphereID = 1.0;
     vec2 sphere = vec2(sphereDist,sphereID);
 
+    //float box
+    float boxDist = fBox(p, vec3(3,9,4));
+    float boxID = 3.0;
+    vec2 box = vec2(boxDist,boxID);
+
+    //cylinder
+    vec3 pc = p;
+    pc.y -= 9.0;
+    float cylinderDist = fCylinder(pc.yxz,4,3);
+    float cylinderID = 3.0;
+    vec2 cylinder = vec2(cylinderDist, cylinderID);
+
+    //wall
+    float wallDist = fBox2(p.xy, vec2(1,15));
+    float wallID = 3.0;
+    vec2 wall = vec2(wallDist,wallID);
+
+
     //result
-    vec2 res = fOpUnionID(sphere,plane);
+    vec2 res;
+    res = box;
+    res = fOpUnionID(res,cylinder);
+    res = fOpDifferenceColumnsID(wall,res,0.6,3.0);
     //vec2 res = sphere;
     return res;
 }
@@ -84,6 +178,8 @@ vec3 getMaterial(vec3 p, float id){
         case 2: 
         m = vec3(0.2 + 0.4 *mod(floor(p.x) + floor(p.z),2.0)); 
         break;
+        case 3:
+        m = vec3(0.7,0.8,0.9);break;
     }
     return m;
 }
@@ -109,7 +205,7 @@ void mouseControl(inout vec3 ro){
 }
 
 void render(inout vec3 col, in vec2 uv){
-    vec3 ro = vec3(3.0,3.0,-3.0);
+    vec3 ro = vec3(10.0,10.0,-3.0);
     mouseControl(ro);
     vec3 lookAt = vec3(0,0,0);
     //vec3 rd = normalize(vec3(uv,FOV));

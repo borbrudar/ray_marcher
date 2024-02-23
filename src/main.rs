@@ -115,7 +115,6 @@ pub fn main() {
                 _ => {}
             }
         }
-        
         unsafe{ 
             gl::Uniform2f(u_resolution.id, 1080.0, 720.0);
             gl::Uniform2f(u_mouse.id,
