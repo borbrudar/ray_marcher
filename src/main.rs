@@ -7,6 +7,7 @@ use sdl2::event::{Event, self};
 use sdl2::keyboard::Keycode;
 use std::time::Duration;
 use render_gl::Uniform;
+use std::time::Instant;
 
 pub fn main() {
     //std::env::set_var("RUST_BACKTRACE", "full");    
@@ -54,7 +55,8 @@ pub fn main() {
 
     let u_resolution : Uniform = Uniform::new(shader_program.id(),"u_resolution").unwrap();
     let u_mouse : Uniform = Uniform::new(shader_program.id(),"u_mouse").unwrap();
-    
+    let u_time : Uniform = Uniform::new(shader_program.id(),"u_time").unwrap();
+
     /**/
     let vertices: Vec<f32> = vec![
     // positions      
@@ -104,7 +106,9 @@ pub fn main() {
         gl::BindVertexArray(0);
     }
     /**/
-    
+
+    let now = Instant::now();
+
     'main: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -120,6 +124,7 @@ pub fn main() {
             gl::Uniform2f(u_mouse.id,
             event_pump.mouse_state().x() as f32,
             event_pump.mouse_state().y() as f32);
+            gl::Uniform1f(u_time.id,now.elapsed().as_secs_f32());
         }
         shader_program.set_used();
         
