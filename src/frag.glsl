@@ -245,6 +245,19 @@ float getSoftShadow(vec3 p, vec3 lightPos){
     return clamp(res,0.0,1.0);
 }
 
+float getAmbientOcclusion(vec3 p,vec3 normal){
+    float occ = 0.0;
+    float weight = 1.0;
+    for(int i =0;i < 8;i++){
+        float len = 0.01 + 0.02 * float(i*i);
+        float dist = map(p + normal*len).x;
+        occ += (len-dist)*weight;
+        weight *= 0.85;
+    }
+
+    return 1.0 - clamp(0.6 * occ,0.0,1.0);
+}
+
 vec3 getLight(vec3 p, vec3 rd,vec3 color){
     vec3 lightPos = vec3(20.0,40.0,-30.0);
     vec3 L = normalize(lightPos - p);
@@ -260,7 +273,10 @@ vec3 getLight(vec3 p, vec3 rd,vec3 color){
 
     //shadows 
     float shadow= getSoftShadow(p + N*0.02, normalize(lightPos)).x;
-    return fresnel + ambient + (specular + diffuse)*shadow;
+    // occ
+    float occ = getAmbientOcclusion(p,N);
+    vec3 back = 0.05 * color * clamp(dot(N,-L),0.0,1.0);
+    return (back+fresnel + ambient)*occ + (specular*occ + diffuse)*shadow;
 }
 
 vec3 getMaterial(vec3 p, float id){
@@ -300,7 +316,7 @@ void mouseControl(inout vec3 ro){
 
 vec3 render(in vec2 uv){
     vec3 col;
-    vec3 ro = vec3(10.0,10.0,-3.0);
+    vec3 ro = vec3(30.0,30.0,-3.0);
     mouseControl(ro);
     vec3 lookAt = vec3(0,0,0);
     //vec3 rd = normalize(vec3(uv,FOV));
