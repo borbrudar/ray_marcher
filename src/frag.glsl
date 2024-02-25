@@ -204,13 +204,13 @@ vec2 map(vec3 p){
 
     //result
     vec2 res;
-    //res = box;
-    //res = fOpUnionID(res,cylinder);
-    //res = fOpDifferenceColumnsID(wall,res,0.6,3.0);
-    //res = fOpUnionStairsID(res,plane,4.0,5.0);
-    //res = fOpUnionChamferID(res,roof,0.9);
-    //res = fOpUnionID(res,b);
-    res=plane;
+    res = box;
+    res = fOpUnionID(res,cylinder);
+    res = fOpDifferenceColumnsID(wall,res,0.6,3.0);
+    res = fOpUnionStairsID(res,plane,4.0,5.0);
+    res = fOpUnionChamferID(res,roof,0.9);
+    res = fOpUnionID(res,b);
+    //res=plane;
     return res;
 }
 
@@ -232,6 +232,19 @@ vec3 getNormal(vec3 p){
     return normalize(n);
 }
 
+float getSoftShadow(vec3 p, vec3 lightPos){
+    float res = 1.0;
+    float dist = 0.01;
+    float lightSize = 0.1;
+    for(int i = 0; i < MAX_STEPS; i++){
+        float hit = map(p + lightPos * dist).x;
+        res = min(res, hit/ (dist*lightSize));
+        dist += hit;
+        if(hit < 0.0001 || dist > 60.0) break;
+    }
+    return clamp(res,0.0,1.0);
+}
+
 vec3 getLight(vec3 p, vec3 rd,vec3 color){
     vec3 lightPos = vec3(20.0,40.0,-30.0);
     vec3 L = normalize(lightPos - p);
@@ -246,10 +259,8 @@ vec3 getLight(vec3 p, vec3 rd,vec3 color){
     vec3 fresnel = 0.25 * color * pow(1.0 + dot(rd,N),3.0);
 
     //shadows 
-    float d = rayMarch(p + N*0.02, normalize(lightPos)).x;
-    if(d < length(lightPos-p)) return vec3(0.0) + fresnel;
-
-    return diffuse + ambient + specular + fresnel;
+    float shadow= getSoftShadow(p + N*0.02, normalize(lightPos)).x;
+    return fresnel + ambient + (specular + diffuse)*shadow;
 }
 
 vec3 getMaterial(vec3 p, float id){
@@ -289,7 +300,7 @@ void mouseControl(inout vec3 ro){
 
 vec3 render(in vec2 uv){
     vec3 col;
-    vec3 ro = vec3(40.0,40.0,-3.0);
+    vec3 ro = vec3(10.0,10.0,-3.0);
     mouseControl(ro);
     vec3 lookAt = vec3(0,0,0);
     //vec3 rd = normalize(vec3(uv,FOV));
@@ -326,8 +337,8 @@ vec3 renderAAx4(){
 void main() {
     //vec2 uv = gl_FragCoord.xy/vec2(800.0,600.0);
     //vec2 uv = gl_FragCoord.xy/u_resolution;
-    vec3 col = renderAAx4(); //anti-aliasing
-    //vec3 col = render(getUV(vec2(0.0,0.0)));
+    //vec3 col = renderAAx4(); //anti-aliasing
+    vec3 col = render(getUV(vec2(0.0,0.0)));
 
     //render(col,u_resolution);
     //gamma correction
