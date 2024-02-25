@@ -1,9 +1,9 @@
-#version 330 core
+#version 450 core
 //#include hg_sdf.glsl
 
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
-uniform float u_time;
+//uniform float u_time;
 
 in vec2 fragCoord;
 out vec4 fragColor;
@@ -18,10 +18,12 @@ void pR(inout vec2 p, float a) {
 	p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
 }
 
+/*
 float fDisplace(vec3 p){
     pR(p.yx,sin(2.0*u_time));
     return (sin(p.x+4.0*u_time)*sin(p.y+sin(2.0*u_time))*sin(p.z+6.0*u_time));
 }
+*/
 
 float fPlane(vec3 p, vec3 n, float distanceFromOrigin) {
 	return dot(p, n) + distanceFromOrigin;
@@ -159,9 +161,15 @@ vec2 map(vec3 p){
     vec2 plane = vec2(planeDist,planeID);
     //sphere
     //p = mod(p,4.0) - 4.0 * 0.5; // infinite repetition
-    float sphereDist = fSphere(p,9.0+fDisplace(p));
-    float sphereID = 1.0;
-    vec2 sphere = vec2(sphereDist,sphereID);
+    //float sphereDist = fSphere(p,9.0+fDisplace(p));
+    //float sphereID = 1.0;
+    //vec2 sphere = vec2(sphereDist,sphereID);
+    
+    // red cube
+    float cdist = fBox(p,vec3(6.0));
+    float cid = 1.0;
+    vec2 b = vec2(cdist,cid);
+    
     //manipulation ops
     pMirrorOctant(p.xz,vec2(50,50));
     p.x = -abs(p.x) + 20;
@@ -196,12 +204,13 @@ vec2 map(vec3 p){
 
     //result
     vec2 res;
-    res = box;
-    res = fOpUnionID(res,cylinder);
-    res = fOpDifferenceColumnsID(wall,res,0.6,3.0);
-    res = fOpUnionStairsID(res,plane,4.0,5.0);
-    res = fOpUnionChamferID(res,roof,0.9);
-    res = fOpUnionID(res,sphere);
+    //res = box;
+    //res = fOpUnionID(res,cylinder);
+    //res = fOpDifferenceColumnsID(wall,res,0.6,3.0);
+    //res = fOpUnionStairsID(res,plane,4.0,5.0);
+    //res = fOpUnionChamferID(res,roof,0.9);
+    //res = fOpUnionID(res,b);
+    res=plane;
     return res;
 }
 
@@ -256,6 +265,8 @@ vec3 getMaterial(vec3 p, float id){
         vec2 i = step(fract(0.5*p.xz),vec2(1.0/10.0));
         m=((1.0-i.x)*(1.0-i.y))*vec3(0.37,0.12,0.0);
         break;
+        default:
+        m = vec3(0.4);break;
     }
     return m;
 }
@@ -276,7 +287,8 @@ void mouseControl(inout vec3 ro){
     pR(ro.xz, m.x * TAU);
 }
 
-void render(inout vec3 col, in vec2 uv){
+vec3 render(in vec2 uv){
+    vec3 col;
     vec3 ro = vec3(40.0,40.0,-3.0);
     mouseControl(ro);
     vec3 lookAt = vec3(0,0,0);
@@ -297,14 +309,25 @@ void render(inout vec3 col, in vec2 uv){
     }else{
         col += background - max(0.95 * rd.y, 0.0);
     }
+    return col;
+}
+
+vec2 getUV(vec2 offset){
+    return (2.0 * (gl_FragCoord.xy + offset) - u_resolution.xy) / u_resolution.y;
+}
+
+vec3 renderAAx4(){
+    vec4 e = vec4(0.125,-0.125,0.375,-0.375);
+    vec3 colAA = render(getUV(e.xz)) + render(getUV(e.yw)) +
+    render(getUV(e.wx)) + render(getUV(e.zy));
+    return colAA/=4.0;
 }
 
 void main() {
-    vec2 uv = (2.0 * gl_FragCoord.xy - u_resolution.xy) / u_resolution.y;
     //vec2 uv = gl_FragCoord.xy/vec2(800.0,600.0);
     //vec2 uv = gl_FragCoord.xy/u_resolution;
-    vec3 col;
-    render(col,uv);
+    vec3 col = renderAAx4(); //anti-aliasing
+    //vec3 col = render(getUV(vec2(0.0,0.0)));
 
     //render(col,u_resolution);
     //gamma correction

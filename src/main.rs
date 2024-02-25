@@ -18,8 +18,8 @@ pub fn main() {
     let gl_attr = video_subsystem.gl_attr();
     
     gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
-    gl_attr.set_context_version(3,3);
-
+    gl_attr.set_context_version(4,5);
+    
     let window = video_subsystem
     .window("Ray marcher fr", 1080, 720)
     .opengl()
@@ -53,22 +53,19 @@ pub fn main() {
     ).unwrap();
     
 
-    let u_resolution : Uniform = Uniform::new(shader_program.id(),"u_resolution").unwrap();
-    let u_mouse : Uniform = Uniform::new(shader_program.id(),"u_mouse").unwrap();
-    let u_time : Uniform = Uniform::new(shader_program.id(),"u_time").unwrap();
-
+    
     /**/
     let vertices: Vec<f32> = vec![
     // positions      
-     1.0, -1.0, 0.0,   // bottom right
+    1.0, -1.0, 0.0,   // bottom right
     -1.0, -1.0, 0.0,  // bottom left
     -1.0,  1.0, 0.0,   // top
 
     -1.0,  1.0, 0.0,   // top
-     1.0,  1.0, 0.0, // top right
-     1.0, -1.0, 0.0,   // bottom right
+    1.0,  1.0, 0.0, // top right
+    1.0, -1.0, 0.0,   // bottom right
     ];
-
+    
     let mut vbo: gl::types::GLuint = 0;
     unsafe {
         gl::GenBuffers(1, &mut vbo);
@@ -84,7 +81,7 @@ pub fn main() {
         );
         gl::BindBuffer(gl::ARRAY_BUFFER, 0); // unbind the buffer
     }
-
+    
     let mut vao: gl::types::GLuint = 0;
     unsafe {
         gl::GenVertexArrays(1, &mut vao);
@@ -106,9 +103,13 @@ pub fn main() {
         gl::BindVertexArray(0);
     }
     /**/
-
+    
+    let u_resolution : Uniform = Uniform::new(shader_program.id(),"u_resolution").unwrap();
+    let u_mouse : Uniform = Uniform::new(shader_program.id(),"u_mouse").unwrap();
+    //let u_time : Uniform = Uniform::new(shader_program.id(),"u_time").unwrap();
     let now = Instant::now();
-
+    
+    
     'main: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -124,7 +125,7 @@ pub fn main() {
             gl::Uniform2f(u_mouse.id,
             event_pump.mouse_state().x() as f32,
             event_pump.mouse_state().y() as f32);
-            gl::Uniform1f(u_time.id,now.elapsed().as_secs_f32());
+            //gl::Uniform1f(u_time.id,now.elapsed().as_secs_f32());
         }
         shader_program.set_used();
         
