@@ -8,6 +8,10 @@ use sdl2::keyboard::Keycode;
 use std::time::Duration;
 use render_gl::Uniform;
 use std::time::Instant;
+use std::env;
+use std::fs;
+use std::file;
+use std::io::{Read, Write};
 
 pub fn main() {
     //std::env::set_var("RUST_BACKTRACE", "full");    
@@ -24,43 +28,40 @@ pub fn main() {
     .window("Ray marcher fr", 1080, 720)
     .opengl()
     .resizable()
-        .position_centered()
-        .build()
+    .position_centered()
+    .build()
         .unwrap();
     
     let gl_context = window.gl_create_context().unwrap();
     let gl = gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
-
+    
     unsafe{
         gl::Viewport(0,0,1080,720);
         gl::ClearColor(0.3,0.3,0.5,1.0);
     }
-
-
-    let mut event_pump = sdl_context.event_pump().unwrap();
     
-    use std::ffi::CString;
-    let vert_shader = render_gl::Shader::from_vert_source(
-        &CString::new(include_str!("vert.glsl")).unwrap()
+    let mut event_pump = sdl_context.event_pump().unwrap();
+
+    let vert_shader = render_gl::Shader::from_vert_file(
+        "src/vert.glsl".to_string()
     ).unwrap();
     
-    let frag_shader = render_gl::Shader::from_frag_source(
-        &CString::new(include_str!("frag.glsl")).unwrap()
+    let frag_shader = render_gl::Shader::from_frag_file(
+        "src/frag.glsl".to_string()
     ).unwrap();
     
     let shader_program = render_gl::Program::from_shaders(
         &[vert_shader,frag_shader]
     ).unwrap();
-    
 
     
     /**/
     let vertices: Vec<f32> = vec![
-    // positions      
-    1.0, -1.0, 0.0,   // bottom right
+        // positions      
+        1.0, -1.0, 0.0,   // bottom right
     -1.0, -1.0, 0.0,  // bottom left
     -1.0,  1.0, 0.0,   // top
-
+    
     -1.0,  1.0, 0.0,   // top
     1.0,  1.0, 0.0, // top right
     1.0, -1.0, 0.0,   // bottom right

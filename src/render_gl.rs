@@ -1,6 +1,11 @@
 use gl;
 use std;
 use std::ffi::{CString,CStr};
+use std::env;
+use std::fs;
+use std::file;
+use std::io::{BufReader, BufRead};
+use std::io::Write;
 
 pub struct Program{
     id: gl::types::GLuint,
@@ -75,24 +80,24 @@ pub struct Shader{
 }
 
 impl Shader {
-    pub fn from_source(
-        source: &CStr,
+    pub fn from_file(
+        path: String,
         kind: gl::types::GLenum
     ) -> Result<Shader, String> {
-        let id = shader_from_source(source, kind)?;
+        let id = shader_from_file(path, kind)?;
         Ok(Shader{id})
     }
 
-    pub fn from_vert_source(source: &CStr) -> Result<Shader,String> {
-        match Shader::from_source(source,gl::VERTEX_SHADER){
+    pub fn from_vert_file(path: String) -> Result<Shader,String> {
+        match Shader::from_file(path,gl::VERTEX_SHADER){
             Ok(shader) => Ok(shader),
             Err(_) => {
                 panic!("Error compiling the vertex shader.");
             } 
         }
     }
-    pub fn from_frag_source(source: &CStr) -> Result<Shader,String> {
-        match Shader::from_source(source,gl::FRAGMENT_SHADER){
+    pub fn from_frag_file(path: String) -> Result<Shader,String> {
+        match Shader::from_file(path,gl::FRAGMENT_SHADER){
             Ok(shader) => Ok(shader),
             Err(_) => {
                 panic!("Error compiling the fragment shader.");
@@ -105,20 +110,55 @@ impl Shader {
     }
 }
 
-    impl Drop for Shader{
-        fn drop(&mut self){
-            unsafe{
-                gl::DeleteShader(self.id);
-            }
+impl Drop for Shader{
+    fn drop(&mut self){
+        unsafe{
+            gl::DeleteShader(self.id);
         }
     }
+}
+
+fn preprocess(
+    path : String
+) -> String{ // location of the preprocessed file
+    let mut out = String::new();
+    out.push_str(path.as_str());
+    out.push_str(".tmp");
 
 
+    let file = fs::File::open(path).unwrap();
+    
+    let _ = fs::remove_file(out.clone());
+    let _ = fs::File::create(out.clone());
+    
+    let mut of = fs::OpenOptions::new()
+    .write(true)
+    .append(true)
+    .open(out.clone())
+    .unwrap();
 
-fn shader_from_source(
-    source: &CStr,
+    
+    let reader = BufReader::new(file);
+
+    for line in reader.lines() {
+        let s = line.unwrap();
+        //println!("{}",s.clone());
+        writeln!(of, "{}", s.as_str());
+    }
+    out
+}
+
+
+fn shader_from_file(
+    path : String,
     kind : gl::types::GLuint // shader type
 ) -> Result<gl::types::GLuint,String> {
+    println!("Given path for shader compilation: {}", path);
+    let new_path = preprocess(path);
+    println!("Preprocessed path is {}",new_path);
+    let contents : String = fs::read_to_string(new_path).expect("Couldnt read shader file");
+    let source = CString::new(contents).unwrap();
+
     let id = unsafe { gl::CreateShader(kind)};
     unsafe{
         gl::ShaderSource(id, 1, &source.as_ptr(), std::ptr::null());
