@@ -150,7 +150,7 @@ fn preprocess(
         for line in lines {
             let s = line.unwrap();
             let words = s.split_whitespace().collect::<Vec<&str>>();
-            if words.len() > 1 && words[0] == "#include" {
+            if bad == 1 && words.len() > 1 && words[0] == "#include" {
                 let check = String::from(words[1].clone());
                 if set.contains(&check.clone()){
                     continue;

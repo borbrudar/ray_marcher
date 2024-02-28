@@ -7,14 +7,11 @@ uniform vec2 u_mouse;
 in vec2 fragCoord;
 out vec4 fragColor;
 
-
 #include src/hg_sdf.glsl
 #include src/material.glsl
 
-#include src/custom_union.glsl
-#include src/ray_march.glsl
-// light relies on the map function, so we cant put it before it
 #include src/light.glsl
+#include src/ray_march.glsl // moot dependency, just for testing
 
 
 mat3 getCam(vec3 ro,vec3 lookAt){

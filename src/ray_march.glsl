@@ -1,4 +1,4 @@
-//#include src/custom_union.glsl -- error, words
+#include src/custom_union.glsl
 
 const float EPSILON = 0.001;
 const float FOV = 1.0;

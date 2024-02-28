@@ -1,3 +1,5 @@
+#include src/ray_march.glsl
+
 vec3 getNormal(vec3 p){
     vec2 e = vec2(EPSILON,0.0);
     vec3 n = vec3(map(p).x) - vec3(map(p-e.xyy).x, map(p-e.yxy).x, map(p-e.yyx).x);
