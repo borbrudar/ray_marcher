@@ -125,26 +125,43 @@ fn preprocess(
     out.push_str(path.as_str());
     out.push_str(".tmp");
 
-
-    let file = fs::File::open(path).unwrap();
     
     let _ = fs::remove_file(out.clone());
-    let _ = fs::File::create(out.clone());
+    let _ = fs::copy(path,out.clone());
     
-    let mut of = fs::OpenOptions::new()
-    .write(true)
-    .append(true)
-    .open(out.clone())
-    .unwrap();
+    let mut bad = 0;
 
-    
-    let reader = BufReader::new(file);
+    while bad == 0{
+        bad = 1;
 
-    for line in reader.lines() {
-        let s = line.unwrap();
-        //println!("{}",s.clone());
-        writeln!(of, "{}", s.as_str());
+
+        let lines : Vec<Result<String,std::io::Error>>= BufReader::new(fs::File::open(out.clone()).expect("buffered reader fck up")).lines().collect();
+        let _ = fs::remove_file(out.clone());
+        let _ = fs::File::create(out.clone());
+
+        let mut of = fs::OpenOptions::new()
+            .write(true)
+            .append(true)
+            .open(out.clone())
+            .unwrap();
+        
+        for line in lines {
+            let s = line.unwrap();
+            let words = s.split_whitespace().collect::<Vec<&str>>();
+            if words.len() > 1 && words[0] == "#include" {
+                bad = 0;
+                let tmp = fs::read_to_string(words[1]).unwrap();
+                writeln!(of,"{}",tmp.as_str());
+            }
+            else {
+                for i in words{
+                    write!(of, "{} ", i);
+                }
+                writeln!(of,"");
+            }     
+        }
     }
+
     out
 }
 
