@@ -6,7 +6,7 @@ use std::fs;
 use std::file;
 use std::io::{BufReader, BufRead};
 use std::io::Write;
-
+use std::collections::HashSet;
 pub struct Program{
     id: gl::types::GLuint,
 }
@@ -131,6 +131,8 @@ fn preprocess(
     
     let mut bad = 0;
 
+    let mut set: HashSet<String> = HashSet::new();
+
     while bad == 0{
         bad = 1;
 
@@ -149,7 +151,12 @@ fn preprocess(
             let s = line.unwrap();
             let words = s.split_whitespace().collect::<Vec<&str>>();
             if words.len() > 1 && words[0] == "#include" {
+                let check = String::from(words[1].clone());
+                if set.contains(&check.clone()){
+                    continue;
+                }
                 bad = 0;
+                set.insert(check);
                 let tmp = fs::read_to_string(words[1]).unwrap();
                 writeln!(of,"{}",tmp.as_str());
             }
