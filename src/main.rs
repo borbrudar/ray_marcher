@@ -3,13 +3,13 @@ extern crate sdl2;
 
 pub mod render_gl;
 use render_gl::Uniform;
-use sdl2::event::{self, Event};
+use sdl2::event::{Event};
 use sdl2::keyboard::Keycode;
-use sdl2::pixels::Color;
-use std::env;
-use std::file;
-use std::fs;
-use std::io::{Read, Write};
+
+
+
+
+
 use std::time::Duration;
 use std::time::Instant;
 
@@ -32,9 +32,8 @@ pub fn main() {
         .build()
         .unwrap();
 
-    let gl_context = window.gl_create_context().unwrap();
-    let gl =
-        gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
+    let _gl_context = window.gl_create_context().unwrap();
+    gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
 
     unsafe {
         gl::Viewport(0, 0, 1080, 720);
@@ -108,7 +107,7 @@ pub fn main() {
     let cam_up_uniform = Uniform::new(shader_program.id(), "cam_up").unwrap();
 
     let mut cam_pos = [30.0, 30.0, -30.0];
-    let mut cam_target = [0.0, 0.0, -1.0];
+    let cam_target = [0.0, 0.0, -1.0];
     let cam_up = [0.0, 1.0, 0.0];
 
     let mut prev = 0.0;
@@ -148,7 +147,7 @@ pub fn main() {
                 } => {
                     //cross product of camera_target and camera_up
                     let cross = [-cam_target[2], 0.0, cam_target[0]];
-                    let siz = ((cross[0] * cross[0] + cross[2] * cross[2]) as f32).sqrt();
+                    let siz = (cross[0] * cross[0] + cross[2] * cross[2]).sqrt();
                     let nc = [cross[0] / siz, 0.0, cross[2] / siz];
 
                     cam_pos[0] -= cam_speed * nc[0];
@@ -161,7 +160,7 @@ pub fn main() {
                 } => {
                     //cross product of camera_target and camera_up
                     let cross = [-cam_target[2], 0.0, cam_target[0]];
-                    let siz = ((cross[0] * cross[0] + cross[2] * cross[2]) as f32).sqrt();
+                    let siz = (cross[0] * cross[0] + cross[2] * cross[2]).sqrt();
                     let nc = [cross[0] / siz, 0.0, cross[2] / siz];
 
                     cam_pos[0] += cam_speed * nc[0];

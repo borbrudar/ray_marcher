@@ -1,9 +1,9 @@
 use gl;
 use std;
 use std::collections::HashSet;
-use std::env;
+
 use std::ffi::{CStr, CString};
-use std::file;
+
 use std::fs;
 use std::io::Write;
 use std::io::{BufRead, BufReader};
@@ -153,7 +153,7 @@ fn preprocess(path: String) -> String {
             let s = line.unwrap();
             let words = s.split_whitespace().collect::<Vec<&str>>();
             if bad == 1 && words.len() > 1 && words[0] == "#include" {
-                let check = String::from(words[1].clone());
+                let check = String::from(words[1]);
                 if set.contains(&check.clone()) {
                     continue;
                 }
@@ -165,7 +165,7 @@ fn preprocess(path: String) -> String {
                 for i in words {
                     write!(of, "{} ", i);
                 }
-                writeln!(of, "");
+                writeln!(of);
             }
         }
     }
