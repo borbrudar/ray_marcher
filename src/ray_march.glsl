@@ -66,10 +66,10 @@ vec2 map(vec3 p){
     return res;
 }
 
-vec2 rayMarch(vec3 ro, vec3 rd){
+vec2 rayMarch(vec3 ray_origin, vec3 ray_direction){
     vec2 hit,object;
     for(int i = 0;i < MAX_STEPS;i++){
-        vec3 p = ro + object.x * rd;
+        vec3 p = ray_origin + object.x * ray_direction;
         hit = map(p);
         object.x += hit.x;
         object.y = hit.y;

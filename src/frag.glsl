@@ -1,8 +1,9 @@
 #version 450 core
 
 uniform vec2 u_resolution;
-uniform vec2 u_mouse;
+//uniform vec2 u_mouse;
 //uniform float u_time;
+
 
 in vec2 fragCoord;
 out vec4 fragColor;
