@@ -121,12 +121,15 @@ pub fn main() {
     
     sdl_context.mouse().show_cursor(false);
     
+    let mut up=0;
+    let mut down=0;
+    let mut left=0;
+    let mut right=0;
     'main: loop {
         delta_time = now.elapsed().as_secs_f32() - prev;
         prev = now.elapsed().as_secs_f32();
         let cam_speed = 50.0 * delta_time;
         let cross = cam_target.cross(cam_up).normalize();
-        
         
         for event in event_pump.poll_iter() {
             match event {
@@ -135,32 +138,45 @@ pub fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'main,
-                Event::KeyDown { keycode: Some(Keycode::Up), .. } => {
-                    cam_pos += cam_speed * cam_target;
-                }
                 Event::KeyDown { keycode: Some(Keycode::W), .. } => {
-                    cam_pos += cam_speed * cam_target;
+                    up=1;
                 }
-                Event::KeyDown { keycode: Some(Keycode::Down), .. } => {
-                    cam_pos -= cam_speed * cam_target;
+                Event::KeyUp { keycode: Some(Keycode::W), .. } => {
+                    up=0;
                 }
                 Event::KeyDown { keycode: Some(Keycode::S), .. } => {
-                    cam_pos -= cam_speed * cam_target;
+                    down=1;
                 }
-                Event::KeyDown {keycode: Some(Keycode::Left), .. } => {
-                    cam_pos -= cam_speed * cross;
+                Event::KeyUp { keycode: Some(Keycode::S), .. } => {
+                    down=0;
                 }
                 Event::KeyDown {keycode: Some(Keycode::A), .. } => {
-                    cam_pos -= cam_speed * cross;
+                    left=1;
                 }
-                Event::KeyDown { keycode: Some(Keycode::Right), .. } => {
-                    cam_pos += cam_speed * cross;
+                Event::KeyUp {keycode: Some(Keycode::A), .. } => {
+                    left=0;
                 }
                 Event::KeyDown { keycode: Some(Keycode::D), .. } => {
-                    cam_pos += cam_speed * cross;
+                    right = 1;
+                }
+                Event::KeyUp { keycode: Some(Keycode::D), .. } => {
+                    right = 0;
                 }
                 _ => {}
             }
+        }
+
+        if up == 1{
+            cam_pos += cam_speed * cam_target;
+        }
+        if down == 1{
+            cam_pos -= cam_speed * cam_target;
+        }
+        if left == 1{
+            cam_pos -= cam_speed * cross;
+        }
+        if right == 1{
+            cam_pos += cam_speed * cross;
         }
         
         sdl_context.mouse().capture(true);
