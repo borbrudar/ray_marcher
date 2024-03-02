@@ -7,7 +7,7 @@ use sdl2::event::{Event};
 use sdl2::keyboard::Keycode;
 
 
-
+use cgmath::{Vector3, InnerSpace};
 
 
 use std::time::Duration;
@@ -100,23 +100,23 @@ pub fn main() {
     //let u_mouse : Uniform = Uniform::new(shader_program.id(),"u_mouse").unwrap();
     //let u_time : Uniform = Uniform::new(shader_program.id(),"u_time").unwrap();
     let now = Instant::now();
-    let mut deltaTime = 0.0;
+    let mut delta_time = 0.0;
 
     let cam_pos_uniform = Uniform::new(shader_program.id(), "cam_pos").unwrap();
     let cam_target_uniform = Uniform::new(shader_program.id(), "cam_target").unwrap();
     let cam_up_uniform = Uniform::new(shader_program.id(), "cam_up").unwrap();
-
-    let mut cam_pos = [30.0, 30.0, -30.0];
-    let cam_target = [0.0, 0.0, -1.0];
-    let cam_up = [0.0, 1.0, 0.0];
-
+    
+    let mut cam_pos = Vector3::new(30.0, 30.0, -30.0);
+    let cam_target = Vector3::new(0.0, 0.0, -1.0);
+    let cam_up = Vector3::new(0.0, 1.0, 0.0);
+    
     let mut prev = 0.0;
-
+    
     'main: loop {
-        deltaTime = now.elapsed().as_secs_f32() - prev;
+        delta_time = now.elapsed().as_secs_f32() - prev;
         prev = now.elapsed().as_secs_f32();
-        let cam_speed = 50.0 * deltaTime;
-        //println!("{}",deltaTime);
+        let cam_speed = 50.0 * delta_time;
+        let cross = cam_target.cross(cam_up).normalize();
 
         for event in event_pump.poll_iter() {
             match event {
@@ -129,43 +129,25 @@ pub fn main() {
                     keycode: Some(Keycode::Up),
                     ..
                 } => {
-                    cam_pos[0] += cam_speed * cam_target[0];
-                    cam_pos[1] += cam_speed * cam_target[1];
-                    cam_pos[2] += cam_speed * cam_target[2];
+                    cam_pos += cam_speed * cam_target;
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::Down),
                     ..
                 } => {
-                    cam_pos[0] -= cam_speed * cam_target[0];
-                    cam_pos[1] -= cam_speed * cam_target[1];
-                    cam_pos[2] -= cam_speed * cam_target[2];
+                    cam_pos -= cam_speed * cam_target;
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::Left),
                     ..
                 } => {
-                    //cross product of camera_target and camera_up
-                    let cross = [-cam_target[2], 0.0, cam_target[0]];
-                    let siz = (cross[0] * cross[0] + cross[2] * cross[2]).sqrt();
-                    let nc = [cross[0] / siz, 0.0, cross[2] / siz];
-
-                    cam_pos[0] -= cam_speed * nc[0];
-                    cam_pos[1] -= cam_speed * nc[1];
-                    cam_pos[2] -= cam_speed * nc[2];
+                    cam_pos -= cam_speed * cross;
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::Right),
                     ..
                 } => {
-                    //cross product of camera_target and camera_up
-                    let cross = [-cam_target[2], 0.0, cam_target[0]];
-                    let siz = (cross[0] * cross[0] + cross[2] * cross[2]).sqrt();
-                    let nc = [cross[0] / siz, 0.0, cross[2] / siz];
-
-                    cam_pos[0] += cam_speed * nc[0];
-                    cam_pos[1] += cam_speed * nc[1];
-                    cam_pos[2] += cam_speed * nc[2];
+                    cam_pos += cam_speed * cross;
                 }
                 _ => {}
             }

@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 sdl2 = "*"
 gl = "*"
+cgmath = "=0.18.0"
