@@ -7,13 +7,15 @@ use sdl2::event::{Event};
 use sdl2::keyboard::Keycode;
 
 
-use cgmath::{Vector3, InnerSpace};
+use cgmath::{Vector3, InnerSpace,Vector2};
 
 
 use std::time::Duration;
 use std::time::Instant;
 
 pub fn main() {
+    let screen_width = 1080;
+    let screen_height = 720;
     //std::env::set_var("RUST_BACKTRACE", "full");
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -25,7 +27,7 @@ pub fn main() {
     gl_attr.set_context_version(4, 5);
 
     let window = video_subsystem
-        .window("Ray marcher fr", 1080, 720)
+        .window("Ray marcher fr", screen_width, screen_height)
         .opengl()
         .resizable()
         .position_centered()
@@ -36,7 +38,7 @@ pub fn main() {
     gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
 
     unsafe {
-        gl::Viewport(0, 0, 1080, 720);
+        gl::Viewport(0, 0, screen_width as i32, screen_height as i32);
         gl::ClearColor(0.3, 0.3, 0.5, 1.0);
     }
 
@@ -107,17 +109,26 @@ pub fn main() {
     let cam_up_uniform = Uniform::new(shader_program.id(), "cam_up").unwrap();
     
     let mut cam_pos = Vector3::new(30.0, 30.0, -30.0);
-    let cam_target = Vector3::new(0.0, 0.0, -1.0);
+    let mut cam_target = Vector3::new(0.0, 0.0, -1.0);
     let cam_up = Vector3::new(0.0, 1.0, 0.0);
     
     let mut prev = 0.0;
+
+    let mut yaw : f32 = -90.0;
+    let mut pitch : f32 = 0.0;
+    
+    let mut last_mouse_pos = Vector2::new((screen_width/2) as i32,(screen_height/2) as i32);
+    
+    sdl_context.mouse().capture(true);
+    sdl_context.mouse().warp_mouse_in_window(&window, last_mouse_pos.x, last_mouse_pos.y);
+    //sdl_context.mouse().show_cursor(false);
     
     'main: loop {
         delta_time = now.elapsed().as_secs_f32() - prev;
         prev = now.elapsed().as_secs_f32();
         let cam_speed = 50.0 * delta_time;
         let cross = cam_target.cross(cam_up).normalize();
-
+        
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
@@ -125,33 +136,46 @@ pub fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'main,
-                Event::KeyDown {
-                    keycode: Some(Keycode::Up),
-                    ..
-                } => {
+                Event::KeyDown { keycode: Some(Keycode::Up), .. } => {
                     cam_pos += cam_speed * cam_target;
                 }
-                Event::KeyDown {
-                    keycode: Some(Keycode::Down),
-                    ..
-                } => {
+                Event::KeyDown { keycode: Some(Keycode::Down), .. } => {
                     cam_pos -= cam_speed * cam_target;
                 }
-                Event::KeyDown {
-                    keycode: Some(Keycode::Left),
-                    ..
-                } => {
+                Event::KeyDown {keycode: Some(Keycode::Left), .. } => {
                     cam_pos -= cam_speed * cross;
                 }
-                Event::KeyDown {
-                    keycode: Some(Keycode::Right),
-                    ..
-                } => {
+                Event::KeyDown { keycode: Some(Keycode::Right), .. } => {
                     cam_pos += cam_speed * cross;
                 }
                 _ => {}
             }
         }
+
+        let cur_x = event_pump.mouse_state().x();
+        let cur_y = event_pump.mouse_state().y();
+        
+        let mut xoffset : f32 = (cur_x - last_mouse_pos.x) as f32;
+        let mut yoffset : f32 = (last_mouse_pos.y - cur_y) as f32; // reversed since y-coordinates range from bottom to top
+        
+        last_mouse_pos.x = cur_x;
+        last_mouse_pos.y = cur_y;
+        
+        let sensitivity : f32 = 0.3;
+        xoffset *= sensitivity;
+        yoffset *= sensitivity;
+
+        pitch += yoffset;
+        yaw += xoffset;
+
+        pitch = pitch.clamp(-89.0,89.0);
+        
+        let mut direction = Vector3::new(0.0,0.0,0.0);
+        direction.x = yaw.to_radians().cos() * pitch.to_radians().cos();
+        direction.z = yaw.to_radians().sin() * pitch.to_radians().cos();
+        direction.y = pitch.to_radians().sin();
+        cam_target = direction.normalize();
+
         unsafe {
             gl::Uniform2f(u_resolution.id, 1080.0, 720.0);
             // gl::Uniform2f(u_mouse.id,
