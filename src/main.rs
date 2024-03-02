@@ -14,8 +14,8 @@ use std::time::Duration;
 use std::time::Instant;
 
 pub fn main() {
-    let screen_width = 1080;
-    let screen_height = 720;
+    let screen_width : i32= 1080;
+    let screen_height : i32= 720;
     //std::env::set_var("RUST_BACKTRACE", "full");
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
@@ -27,7 +27,7 @@ pub fn main() {
     gl_attr.set_context_version(4, 5);
 
     let window = video_subsystem
-        .window("Ray marcher fr", screen_width, screen_height)
+        .window("Ray marcher fr", screen_width as u32, screen_height as u32)
         .opengl()
         .resizable()
         .position_centered()
@@ -38,7 +38,7 @@ pub fn main() {
     gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
 
     unsafe {
-        gl::Viewport(0, 0, screen_width as i32, screen_height as i32);
+        gl::Viewport(0, 0, screen_width, screen_height);
         gl::ClearColor(0.3, 0.3, 0.5, 1.0);
     }
 
@@ -117,17 +117,16 @@ pub fn main() {
     let mut yaw : f32 = -90.0;
     let mut pitch : f32 = 0.0;
     
-    let mut last_mouse_pos = Vector2::new((screen_width/2) as i32,(screen_height/2) as i32);
+    let mut last_mouse_pos = Vector2::new(screen_width/2,screen_height/2);
     
-    sdl_context.mouse().capture(true);
-    sdl_context.mouse().warp_mouse_in_window(&window, last_mouse_pos.x, last_mouse_pos.y);
-    //sdl_context.mouse().show_cursor(false);
+    sdl_context.mouse().show_cursor(false);
     
     'main: loop {
         delta_time = now.elapsed().as_secs_f32() - prev;
         prev = now.elapsed().as_secs_f32();
         let cam_speed = 50.0 * delta_time;
         let cross = cam_target.cross(cam_up).normalize();
+        
         
         for event in event_pump.poll_iter() {
             match event {
@@ -139,21 +138,37 @@ pub fn main() {
                 Event::KeyDown { keycode: Some(Keycode::Up), .. } => {
                     cam_pos += cam_speed * cam_target;
                 }
+                Event::KeyDown { keycode: Some(Keycode::W), .. } => {
+                    cam_pos += cam_speed * cam_target;
+                }
                 Event::KeyDown { keycode: Some(Keycode::Down), .. } => {
+                    cam_pos -= cam_speed * cam_target;
+                }
+                Event::KeyDown { keycode: Some(Keycode::S), .. } => {
                     cam_pos -= cam_speed * cam_target;
                 }
                 Event::KeyDown {keycode: Some(Keycode::Left), .. } => {
                     cam_pos -= cam_speed * cross;
                 }
+                Event::KeyDown {keycode: Some(Keycode::A), .. } => {
+                    cam_pos -= cam_speed * cross;
+                }
                 Event::KeyDown { keycode: Some(Keycode::Right), .. } => {
+                    cam_pos += cam_speed * cross;
+                }
+                Event::KeyDown { keycode: Some(Keycode::D), .. } => {
                     cam_pos += cam_speed * cross;
                 }
                 _ => {}
             }
         }
-
+        
+        sdl_context.mouse().capture(true);
         let cur_x = event_pump.mouse_state().x();
         let cur_y = event_pump.mouse_state().y();
+        if cur_x != screen_width/2 || cur_y != screen_height/2{
+            //sdl_context.mouse().warp_mouse_in_window(&window, screen_width/2 , screen_height/2);
+        }
         
         let mut xoffset : f32 = (cur_x - last_mouse_pos.x) as f32;
         let mut yoffset : f32 = (last_mouse_pos.y - cur_y) as f32; // reversed since y-coordinates range from bottom to top
@@ -164,7 +179,7 @@ pub fn main() {
         let sensitivity : f32 = 0.3;
         xoffset *= sensitivity;
         yoffset *= sensitivity;
-
+        
         pitch += yoffset;
         yaw += xoffset;
 

@@ -12,10 +12,10 @@ vec2 map(vec3 p){
     float planeID = 2.0;
     vec2 plane = vec2(planeDist,planeID);
     //sphere
-    //p = mod(p,4.0) - 4.0 * 0.5; // infinite repetition
-    //float sphereDist = fSphere(p,1.0); //fSphere(p,9.0+fDisplace(p));
-    //float sphereID = 1.0;
-    //vec2 sphere = vec2(sphereDist,sphereID);
+    p = mod(p+2.0,4.0) - 4.0 * 0.5; // infinite repetition
+    float sphereDist = fSphere(p,1.0); //fSphere(p,9.0+fDisplace(p));
+    float sphereID = 1.0;
+    vec2 sphere = vec2(sphereDist,sphereID);
     
     // red cube
     float cdist = fBox(p,vec3(6.0));
@@ -56,13 +56,13 @@ vec2 map(vec3 p){
 
     //result
     vec2 res;
-    res = box;
-    res = fOpUnionID(res,cylinder);
-    res = fOpDifferenceColumnsID(wall,res,0.6,3.0);
-    res = fOpUnionStairsID(res,plane,4.0,5.0);
-    res = fOpUnionChamferID(res,roof,0.9);
-    res = fOpUnionID(res,b);
-    //res=sphere;
+    //res = box;
+    //res = fOpUnionID(res,cylinder);
+    //res = fOpDifferenceColumnsID(wall,res,0.6,3.0);
+    //res = fOpUnionStairsID(res,plane,4.0,5.0);
+    //res = fOpUnionChamferID(res,roof,0.9);
+    //res = fOpUnionID(res,b);
+    res=sphere;
     return res;
 }
 
