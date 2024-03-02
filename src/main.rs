@@ -182,12 +182,10 @@ pub fn main() {
         sdl_context.mouse().capture(true);
         let cur_x = event_pump.mouse_state().x();
         let cur_y = event_pump.mouse_state().y();
-        if cur_x != screen_width/2 || cur_y != screen_height/2{
-            //sdl_context.mouse().warp_mouse_in_window(&window, screen_width/2 , screen_height/2);
-        }
         
         let mut xoffset : f32 = (cur_x - last_mouse_pos.x) as f32;
         let mut yoffset : f32 = (last_mouse_pos.y - cur_y) as f32; // reversed since y-coordinates range from bottom to top
+        
         
         last_mouse_pos.x = cur_x;
         last_mouse_pos.y = cur_y;
@@ -198,6 +196,9 @@ pub fn main() {
         
         pitch += yoffset;
         yaw += xoffset;
+        sdl_context.mouse().warp_mouse_in_window(&window, screen_width/2 , screen_height/2);
+        last_mouse_pos.x = screen_width/2;
+        last_mouse_pos.y = screen_height/2;
 
         pitch = pitch.clamp(-89.0,89.0);
         
