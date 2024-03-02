@@ -1,7 +1,9 @@
 #include src/custom_union.glsl
 
+uniform float FOV;
+
 const float EPSILON = 0.001;
-const float FOV = 1.0;
+//const float FOV = 1.0;
 const int MAX_STEPS = 256;
 const float MAX_DIST = 500;
 

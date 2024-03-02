@@ -8,6 +8,7 @@ use sdl2::keyboard::Keycode;
 
 
 use cgmath::{Vector3, InnerSpace,Vector2};
+use sdl2::mouse::MouseWheelDirection;
 
 
 use std::time::Duration;
@@ -107,6 +108,7 @@ pub fn main() {
     let cam_pos_uniform = Uniform::new(shader_program.id(), "cam_pos").unwrap();
     let cam_target_uniform = Uniform::new(shader_program.id(), "cam_target").unwrap();
     let cam_up_uniform = Uniform::new(shader_program.id(), "cam_up").unwrap();
+    let fov_uniform = Uniform::new(shader_program.id(),"FOV").unwrap();
     
     let mut cam_pos = Vector3::new(30.0, 30.0, -30.0);
     let mut cam_target = Vector3::new(0.0, 0.0, -1.0);
@@ -120,6 +122,7 @@ pub fn main() {
     let mut last_mouse_pos = Vector2::new(screen_width/2,screen_height/2);
     
     sdl_context.mouse().show_cursor(false);
+    let mut fov : f32 = 1.0;
     
     let mut up=0;
     let mut down=0;
@@ -130,7 +133,7 @@ pub fn main() {
         prev = now.elapsed().as_secs_f32();
         let cam_speed = 50.0 * delta_time;
         let cross = cam_target.cross(cam_up).normalize();
-        
+
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
@@ -162,6 +165,21 @@ pub fn main() {
                 Event::KeyUp { keycode: Some(Keycode::D), .. } => {
                     right = 0;
                 }
+                Event::MouseWheel { y,..} =>{
+                    if y > 0 {
+                        fov += 0.3;
+                    }
+                    else {
+                        fov -= 0.3;
+                    }
+                    fov = fov.clamp(1.0, 5.0);
+                }
+                Event::MouseButtonDown { .. } => {
+                    fov =5.0;
+                }
+                Event::MouseButtonUp { .. } => {
+                    fov = 1.0;
+                }
                 _ => {}
             }
         }
@@ -178,7 +196,7 @@ pub fn main() {
         if right == 1{
             cam_pos += cam_speed * cross;
         }
-        
+
         sdl_context.mouse().capture(true);
         let cur_x = event_pump.mouse_state().x();
         let cur_y = event_pump.mouse_state().y();
@@ -190,7 +208,7 @@ pub fn main() {
         last_mouse_pos.x = cur_x;
         last_mouse_pos.y = cur_y;
         
-        let sensitivity : f32 = 0.3;
+        let sensitivity : f32 = 0.2;
         xoffset *= sensitivity;
         yoffset *= sensitivity;
         
@@ -201,6 +219,8 @@ pub fn main() {
         last_mouse_pos.y = screen_height/2;
 
         pitch = pitch.clamp(-89.0,89.0);
+
+    
         
         let mut direction = Vector3::new(0.0,0.0,0.0);
         direction.x = yaw.to_radians().cos() * pitch.to_radians().cos();
@@ -222,6 +242,7 @@ pub fn main() {
                 cam_target[2],
             );
             gl::Uniform3f(cam_up_uniform.id, cam_up[0], cam_up[1], cam_up[2]);
+            gl::Uniform1f(fov_uniform.id,fov);
         }
         shader_program.set_used();
 
