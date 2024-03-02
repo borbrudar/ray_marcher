@@ -128,12 +128,12 @@ pub fn main() {
     let mut down=0;
     let mut left=0;
     let mut right=0;
+    let mut speed_mod = 0;
     'main: loop {
         delta_time = now.elapsed().as_secs_f32() - prev;
         prev = now.elapsed().as_secs_f32();
-        let cam_speed = 50.0 * delta_time;
         let cross = cam_target.cross(cam_up).normalize();
-
+        
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
@@ -165,6 +165,12 @@ pub fn main() {
                 Event::KeyUp { keycode: Some(Keycode::D), .. } => {
                     right = 0;
                 }
+                Event::KeyDown { keycode: Some(Keycode::LShift), ..} => {
+                    speed_mod=1;
+                }
+                Event::KeyUp { keycode: Some(Keycode::LShift), ..} => {
+                    speed_mod=0;
+                }
                 Event::MouseWheel { y,..} =>{
                     if y > 0 {
                         fov += 0.3;
@@ -184,6 +190,10 @@ pub fn main() {
             }
         }
 
+        let mut cam_speed = 50.0 * delta_time;
+        if speed_mod == 1{
+            cam_speed *= 2.0;
+        }
         if up == 1{
             cam_pos += cam_speed * cam_target;
         }
